@@ -1,6 +1,7 @@
 import typing as t
 from dataclasses import asdict, dataclass
 from datetime import datetime
+from deprecated import deprecated
 
 from internal.openapi_client.api.message_attempt import (
     get_attempt_api_v1_app_app_id_msg_msg_id_attempt_attempt_id_get,
@@ -724,6 +725,27 @@ class MessageAttempt(ApiBase):
             msg_id=msg_id,
             **options.to_dict(),
         )
+    @deprecated(reason="use list_by_msg or list_by_endpoint instead")
+    def list(
+        self, app_id: str, msg_id: str, options: MessageAttemptListOptions = MessageAttemptListOptions()
+    ) -> ListResponseMessageAttemptOut:
+        return self.list_by_msg(app_id=app_id, msg_id=msg_id, options=options)
+
+    def list_by_msg(
+        self, app_id: str, msg_id: str, options: MessageAttemptListOptions = MessageAttemptListOptions()
+    ) -> ListResponseMessageAttemptOut:
+        with self._api() as api:
+            return api.list_attempted_destinations_by_msg_api_v1_app_app_id_attempt_msg_msg_id_get(
+                app_id=app_id, msg_id=msg_id, **options.to_dict(), _check_return_type=False
+            )
+
+    def list_by_endpoint(
+        self, app_id: str, endpoint_id: str, options: MessageAttemptListOptions = MessageAttemptListOptions()
+    ) -> ListResponseMessageAttemptOut:
+        with self._api() as api:
+            return api.list_attempted_destinations_by_endpoint_api_v1_app_app_id_attempt_endpoint_endpoint_id_get(
+                app_id=app_id, endpoint_id=endpoint_id, **options.to_dict(), _check_return_type=False
+            )
 
     def get(self, app_id: str, msg_id: str, attempt_id: str) -> MessageAttemptOut:
         return get_attempt_api_v1_app_app_id_msg_msg_id_attempt_attempt_id_get.sync(

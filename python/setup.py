@@ -32,6 +32,7 @@ PKG_REQUIRES = [
     "httpx >=0.15.4,<0.23.0",
     "attrs >=21.3.0",
     "python-dateutil"
+    "Deprecated",
 ]
 
 def find_meta(meta):

@@ -52,7 +52,7 @@ import * as base64 from "@stablelib/base64";
 import * as sha256 from "fast-sha256";
 
 const WEBHOOK_TOLERANCE_IN_SECONDS = 5 * 60; // 5 minutes
-const VERSION = "0.47.1";
+const VERSION = "0.48.0";
 
 class UserAgentMiddleware implements Middleware {
   public pre(context: RequestContext): Promise<RequestContext> {
@@ -405,14 +405,41 @@ class MessageAttempt {
     this.api = new MessageAttemptApi(config);
   }
 
+  /**
+   * @deprecated Since version 0.48.0. Use listByMsg or listByEndpoint instead.
+   */
   public list(
     appId: string,
     msgId: string,
     options?: MessageAttemptListOptions
   ): Promise<ListResponseMessageAttemptOut> {
-    return this.api.listAttemptsApiV1AppAppIdMsgMsgIdAttemptGet({
+    return this.listByMsg(
       appId,
       msgId,
+      options,
+    );
+  }
+
+  public listByMsg(
+    appId: string,
+    msgId: string,
+    options?: MessageAttemptListOptions
+  ): Promise<ListResponseMessageAttemptOut> {
+    return this.api.listAttemptedDestinationsByMsgApiV1AppAppIdAttemptMsgMsgIdGet({
+      appId,
+      msgId,
+      ...options,
+    });
+  }
+
+  public listByEndpoint(
+    appId: string,
+    endpointId: string,
+    options?: MessageAttemptListOptions
+  ): Promise<ListResponseMessageAttemptOut> {
+    return this.api.listAttemptedDestinationsByEndpointApiV1AppAppIdAttemptEndpointEndpointIdGet({
+      appId,
+      endpointId,
       ...options,
     });
   }
