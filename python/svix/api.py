@@ -1,15 +1,8 @@
 import typing as t
-from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from datetime import datetime
 
-from .internal.openapi_client import api
-from .internal.openapi_client.api import authentication
-from .internal.openapi_client.api import endpoint 
-from .internal.openapi_client.api import event_type 
-from .internal.openapi_client.api import integration
-from .internal.openapi_client.api import message 
-from .internal.openapi_client.api import message_attempt
+from .internal.openapi_client.api.application import list_applications_api_v1_app_get
 from .internal.openapi_client.client import AuthenticatedClient
 from .internal.openapi_client.models.application_in import ApplicationIn
 from .internal.openapi_client.models.application_out import ApplicationOut
@@ -20,20 +13,16 @@ from .internal.openapi_client.models.endpoint_in import EndpointIn
 from .internal.openapi_client.models.endpoint_out import EndpointOut
 from .internal.openapi_client.models.endpoint_secret_out import EndpointSecretOut
 from .internal.openapi_client.models.endpoint_secret_rotate_in import EndpointSecretRotateIn
-from .internal.openapi_client.models.endpoint_update import EndpointUpdate
 from .internal.openapi_client.models.event_type_in import EventTypeIn
 from .internal.openapi_client.models.event_type_out import EventTypeOut
 from .internal.openapi_client.models.event_type_update import EventTypeUpdate
-from .internal.openapi_client.models.integration_in import IntegrationIn
-from .internal.openapi_client.models.integration_key_out import IntegrationKeyOut
-from .internal.openapi_client.models.integration_out import IntegrationOut
-from .internal.openapi_client.models.integration_update import IntegrationUpdate
 from .internal.openapi_client.models.list_response_application_out import ListResponseApplicationOut
 from .internal.openapi_client.models.list_response_endpoint_message_out import ListResponseEndpointMessageOut
 from .internal.openapi_client.models.list_response_endpoint_out import ListResponseEndpointOut
 from .internal.openapi_client.models.list_response_event_type_out import ListResponseEventTypeOut
-from .internal.openapi_client.models.list_response_integration_out import ListResponseIntegrationOut
-from .internal.openapi_client.models.list_response_message_attempt_endpoint_out import ListResponseMessageAttemptEndpointOut
+from .internal.openapi_client.models.list_response_message_attempt_endpoint_out import (
+    ListResponseMessageAttemptEndpointOut,
+)
 from .internal.openapi_client.models.list_response_message_attempt_out import ListResponseMessageAttemptOut
 from .internal.openapi_client.models.list_response_message_endpoint_out import ListResponseMessageEndpointOut
 from .internal.openapi_client.models.list_response_message_out import ListResponseMessageOut
@@ -120,7 +109,6 @@ class ApiBase:
         self._client = client
 
 
-
 # class Authentication(ApiBase[AuthenticationApi]):
 #     _ApiClass = AuthenticationApi
 
@@ -133,12 +121,14 @@ class ApiBase:
 #     def logout(self, options: PostOptions = PostOptions()) -> None:
 #         with self._api() as api:
 #             return api.logout_api_v1_auth_logout_post(**options.to_dict(), _check_return_type=False)
+class ApplicationAsync(ApiBase):
+    async def list(self, options: ApplicationListOptions = ApplicationListOptions()) -> ListResponseApplicationOut:
+        return await list_applications_api_v1_app_get.asyncio(client=self._client, **options.to_dict())
+
 
 class Application(ApiBase):
-
-
     def list(self, options: ApplicationListOptions = ApplicationListOptions()) -> ListResponseApplicationOut:
-        return application.list_application_api_v1_app_get.sync(**options.to_dict())
+        return list_applications_api_v1_app_get.sync(client=self._client, **options.to_dict())
 
     # def create(self, application_in: ApplicationIn, options: PostOptions = PostOptions()) -> ApplicationOut:
     #     with self._api() as api:
@@ -413,17 +403,24 @@ class Application(ApiBase):
 #             return api.list_attempts_for_endpoint_api_v1_app_app_id_msg_msg_id_endpoint_endpoint_id_attempt_get(
 #                 app_id=app_id, msg_id=msg_id, endpoint_id=endpoint_id, **options.to_dict(), _check_return_type=False
 #             )
-
-
-class Svix:
+class ClientBase:
     _client: AuthenticatedClient
 
     def __init__(self, auth_token: str, options: SvixOptions = SvixOptions()) -> None:
-        from . import __version__ 
+        from . import __version__
 
         host = options.server_url or DEFAULT_SERVER_URL
         client = AuthenticatedClient(base_url=host, token=auth_token)
-        self._client = client.with_headers(headers={"user_agent":f"svix-libs/{__version__}/python"})
+        self._client = client.with_headers(headers={"user_agent": f"svix-libs/{__version__}/python"})
+
+
+class SvixAsync(ClientBase):
+    @property
+    def application(self) -> ApplicationAsync:
+        return ApplicationAsync(self._client)
+
+
+class Svix(ClientBase):
 
     # @property
     # def authentication(self) -> Authentication:
